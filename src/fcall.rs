@@ -6,6 +6,7 @@
 use std::fs;
 use std::mem::{size_of, size_of_val};
 use std::os::unix::fs::MetadataExt;
+use nix::sys::statvfs::Statvfs;
 
 use bitflags::bitflags;
 use enum_primitive::*;
@@ -320,8 +321,8 @@ pub struct Statfs {
     pub namelen: u32,
 }
 
-impl From<nix::sys::statvfs::Statvfs> for Statfs {
-    fn from(buf: nix::sys::statvfs::Statvfs) -> Statfs {
+impl From<Statvfs> for Statfs {
+    fn from(buf: Statvfs) -> Statfs {
         Statfs {
             typ: 0,
             bsize: buf.block_size() as u32,
