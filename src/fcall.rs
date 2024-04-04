@@ -6,10 +6,10 @@
 use std::fs;
 use std::mem::{size_of, size_of_val};
 use std::os::unix::fs::MetadataExt;
-use nix::sys::statvfs::Statvfs;
 
 use bitflags::bitflags;
 use enum_primitive::*;
+use nix::sys::statvfs::Statvfs;
 
 /// 9P2000 version string
 pub const P92000: &str = "9P2000";
