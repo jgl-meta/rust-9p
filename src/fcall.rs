@@ -9,6 +9,7 @@ use std::os::unix::fs::MetadataExt;
 
 use bitflags::bitflags;
 use enum_primitive::*;
+use nix::sys::statvfs::Statvfs;
 
 /// 9P2000 version string
 pub const P92000: &str = "9P2000";
@@ -320,8 +321,8 @@ pub struct Statfs {
     pub namelen: u32,
 }
 
-impl From<nix::sys::statvfs::Statvfs> for Statfs {
-    fn from(buf: nix::sys::statvfs::Statvfs) -> Statfs {
+impl From<Statvfs> for Statfs {
+    fn from(buf: Statvfs) -> Statfs {
         Statfs {
             typ: 0,
             bsize: buf.block_size() as u32,

@@ -443,7 +443,7 @@ dependencies = [
  "futures",
  "log",
  "nix",
- "num-traits 0.2.14",
+ "num-traits 0.1.43",
  "tokio",
  "tokio-stream",
  "tokio-util",
