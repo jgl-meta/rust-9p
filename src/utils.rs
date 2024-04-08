@@ -24,6 +24,5 @@ pub fn parse_proto(arg: &str) -> Option<(&str, String)> {
         _ => (),
     }
 
-    println!("*******delim is {}", delim);
     Some((proto, addr.to_owned() + delim + port))
 }
