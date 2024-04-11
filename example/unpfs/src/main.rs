@@ -84,14 +84,17 @@ impl Filesystem for Unpfs {
 
         for (i, name) in wnames.iter().enumerate() {
             path.push(name);
-
             let qid = match get_qid(&path).await {
                 Ok(qid) => qid,
-                Err(e) => {
-                    if i == 0 {
-                        return Err(e);
-                    } else {
-                        break;
+                Err(e) => match e.errno() {
+                    // This happens naturally when files are added
+                    nix::errno::Errno::ENOENT => break,
+                    _ => {
+                        if i == 0 {
+                            return Err(e);
+                        } else {
+                            break;
+                        }
                     }
                 }
             };
