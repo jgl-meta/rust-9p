@@ -15,19 +15,20 @@ macro_rules! res {
 }
 
 pub fn parse_proto(arg: &str) -> Option<(&str, String)> {
-    match arg == "io" {
-        true => Some((arg, "".to_string())),
-        _ => {
-            let mut split = arg.split('!');
-            let (proto, addr, port) = (split.next()?, split.next()?, split.next()?);
-            let mut delim = "_";
+        let mut split = arg.split('!');
+        let (proto, addr, port) = (split.next()?, split.next()?, split.next()?);
+        let mut delim = "_";
 
-            match proto == "tcp" {
-                true => delim = ":",
-                _ => (),
-            }
+        match proto == "tcp" {
+            true => delim = ":",
+            _ => {
+                match proto == "io" {
+                    true => delim = "",
+                    _ => (),
+                }
 
-            Some((proto, addr.to_owned() + delim + port))
+            },
         }
-    }
+
+        Some((proto, addr.to_owned() + delim + port))
 }

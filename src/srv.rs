@@ -24,6 +24,7 @@ use {
     tokio_stream::StreamExt,
     tokio::net::UnixStream,
     tokio_util::codec::length_delimited::LengthDelimitedCodec,
+    std::os::unix::net::UnixListener as UnixSock,
 };
 
 /// Represents a fid of clients holding associated `Filesystem::Fid`.
@@ -432,11 +433,12 @@ where
     }
 }
 
-pub async fn srv_async_io<Fs>(filesystem: Fs) -> Result<()>
+pub async fn srv_async_io<Fs>(filesystem: Fs, fd_num: &str) -> Result<()>
 where
     Fs: 'static + Filesystem + Send + Sync + Clone,
 {
-    let us: std::os::unix::net::UnixStream = unsafe { std::os::unix::net::UnixStream::from_raw_fd(44444) };
+    let fd: i32 = fd_num.parse::<i32>().unwrap();
+    let us: std::os::unix::net::UnixStream = unsafe { std::os::unix::net::UnixStream::from_raw_fd(fd) };
     let fs = filesystem.clone();
     let task = tokio::spawn(async move {
         // in this case stdin needs to be an open unix socket
@@ -464,7 +466,7 @@ where
         .ok_or_else(|| io_err!(InvalidInput, "Invalid protocol or address"))?;
 
     match proto {
-        "io" => srv_async_io(filesystem).await,
+        "io" => srv_async_io(filesystem, &listen_addr).await,
         "tcp" => srv_async_tcp(filesystem, &listen_addr).await,
         "unix" => srv_async_unix(filesystem, &listen_addr).await,
         _ => Err(From::from(io_err!(InvalidInput, "Protocol not supported"))),
