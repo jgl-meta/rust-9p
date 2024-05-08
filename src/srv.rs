@@ -15,12 +15,14 @@ use {
     bytes::buf::{Buf, BufMut},
     futures::sink::SinkExt,
     std::{collections::HashMap, sync::Arc},
+    std::os::fd::FromRawFd,
     tokio::{
         io::{AsyncRead, AsyncWrite},
         net::{TcpListener, UnixListener},
         sync::{Mutex, RwLock},
     },
     tokio_stream::StreamExt,
+    tokio::net::UnixStream,
     tokio_util::codec::length_delimited::LengthDelimitedCodec,
 };
 
@@ -430,6 +432,30 @@ where
     }
 }
 
+pub async fn srv_async_io<Fs>(filesystem: Fs) -> Result<()>
+where
+    Fs: 'static + Filesystem + Send + Sync + Clone,
+{
+    let us: std::os::unix::net::UnixStream = unsafe { std::os::unix::net::UnixStream::from_raw_fd(44444) };
+    let fs = filesystem.clone();
+    let task = tokio::spawn(async move {
+        // in this case stdin needs to be an open unix socket
+        let _ = us.set_nonblocking(true);
+        let stream = UnixStream::from_std(us).unwrap();
+        let (readhalf, writehalf) = tokio::io::split(stream);
+        let res = dispatch(fs, readhalf, writehalf).await;
+        if let Err(e) = res {
+            error!("Error: {:?}", e);
+        }
+    });
+    let result = task.await;
+    if let Err(e) = result {
+        error!("Failed with: {:?}", e);
+    }
+    let listener = UnixSock::bind("/killsock").unwrap(); 
+    let (_, _) = listener.accept().unwrap();
+    Ok(())
+}
 pub async fn srv_async<Fs>(filesystem: Fs, addr: &str) -> Result<()>
 where
     Fs: 'static + Filesystem + Send + Sync + Clone,
@@ -438,6 +464,7 @@ where
         .ok_or_else(|| io_err!(InvalidInput, "Invalid protocol or address"))?;
 
     match proto {
+        "io" => srv_async_io(filesystem).await,
         "tcp" => srv_async_tcp(filesystem, &listen_addr).await,
         "unix" => srv_async_unix(filesystem, &listen_addr).await,
         _ => Err(From::from(io_err!(InvalidInput, "Protocol not supported"))),

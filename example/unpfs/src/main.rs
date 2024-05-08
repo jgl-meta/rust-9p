@@ -394,9 +394,10 @@ impl Filesystem for Unpfs {
 }
 
 async fn unpfs_main(args: Vec<String>) -> rs9p::Result<i32> {
-    if args.len() < 3 {
+    if args.len() < 2 {
         eprintln!("Usage: {} proto!address!port mountpoint", args[0]);
         eprintln!("  where: proto = tcp | unix");
+        eprintln!("  Or: proto = io Usage proto mountpoint");
         return Ok(-1);
     }
 
