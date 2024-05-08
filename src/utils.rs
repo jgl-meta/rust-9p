@@ -17,6 +17,12 @@ macro_rules! res {
 pub fn parse_proto(arg: &str) -> Option<(&str, String)> {
     let mut split = arg.split('!');
     let (proto, addr, port) = (split.next()?, split.next()?, split.next()?);
+    let mut delim = "_";
 
-    Some((proto, addr.to_owned() + ":" + port))
+    match proto == "tcp" {
+        true => delim = ":",
+        _ => (),
+    }
+
+    Some((proto, addr.to_owned() + delim + port))
 }
